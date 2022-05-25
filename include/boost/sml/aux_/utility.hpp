@@ -290,6 +290,7 @@ template <class R, class TBase, class... TArgs, class T>
 struct zero_wrapper<R (TBase::*)(TArgs...), T> {
   explicit zero_wrapper(R (TBase::*ptr)(TArgs...)) : ptr{ptr} {}
   auto operator()(TBase &self, TArgs... args) { return (self.*ptr)(args...); }
+  const auto &get() const { return *this; }
 
  private:
   R (TBase::*ptr)(TArgs...){};
@@ -299,6 +300,7 @@ template <class R, class TBase, class... TArgs, class T>
 struct zero_wrapper<R (TBase::*)(TArgs...) const, T> {
   explicit zero_wrapper(R (TBase::*ptr)(TArgs...) const) : ptr{ptr} {}
   auto operator()(TBase &self, TArgs... args) { return (self.*ptr)(args...); }
+  const auto &get() const { return *this; }
 
  private:
   R (TBase::*ptr)(TArgs...) const {};
@@ -308,6 +310,7 @@ template <class R, class... TArgs, class T>
 struct zero_wrapper<R (*)(TArgs...), T> {
   explicit zero_wrapper(R (*ptr)(TArgs...)) : ptr{ptr} {}
   auto operator()(TArgs... args) { return (*ptr)(args...); }
+  const auto &get() const { return *this; }
 
  private:
   R (*ptr)(TArgs...){};
@@ -318,6 +321,7 @@ template <class R, class TBase, class... TArgs, class T>
 struct zero_wrapper<R (TBase::*)(TArgs...) noexcept, T> {
   explicit zero_wrapper(R (TBase::*ptr)(TArgs...) noexcept) : ptr{ptr} {}
   auto operator()(TBase &self, TArgs... args) { return (self.*ptr)(args...); }
+  const auto &get() const { return *this; }
 
  private:
   R (TBase::*ptr)(TArgs...) noexcept {};
@@ -327,6 +331,7 @@ template <class R, class TBase, class... TArgs, class T>
 struct zero_wrapper<R (TBase::*)(TArgs...) const noexcept, T> {
   explicit zero_wrapper(R (TBase::*ptr)(TArgs...) const noexcept) : ptr{ptr} {}
   auto operator()(TBase &self, TArgs... args) { return (self.*ptr)(args...); }
+  const auto &get() const { return *this; }
 
  private:
   R (TBase::*ptr)(TArgs...) const noexcept {};
@@ -336,6 +341,7 @@ template <class R, class... TArgs, class T>
 struct zero_wrapper<R (*)(TArgs...) noexcept, T> {
   explicit zero_wrapper(R (*ptr)(TArgs...) noexcept) : ptr{ptr} {}
   auto operator()(TArgs... args) { return (*ptr)(args...); }
+  const auto &get() const { return *this; }
 
  private:
   R (*ptr)(TArgs...) noexcept {};

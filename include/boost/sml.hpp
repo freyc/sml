@@ -465,6 +465,7 @@ template <class R, class TBase, class... TArgs, class T>
 struct zero_wrapper<R (TBase::*)(TArgs...), T> {
   explicit zero_wrapper(R (TBase::*ptr)(TArgs...)) : ptr{ptr} {}
   auto operator()(TBase &self, TArgs... args) { return (self.*ptr)(args...); }
+  const auto &get() const { return *this; }
 
  private:
   R (TBase::*ptr)(TArgs...){};
@@ -473,6 +474,7 @@ template <class R, class TBase, class... TArgs, class T>
 struct zero_wrapper<R (TBase::*)(TArgs...) const, T> {
   explicit zero_wrapper(R (TBase::*ptr)(TArgs...) const) : ptr{ptr} {}
   auto operator()(TBase &self, TArgs... args) { return (self.*ptr)(args...); }
+  const auto &get() const { return *this; }
 
  private:
   R (TBase::*ptr)(TArgs...) const {};
@@ -481,6 +483,7 @@ template <class R, class... TArgs, class T>
 struct zero_wrapper<R (*)(TArgs...), T> {
   explicit zero_wrapper(R (*ptr)(TArgs...)) : ptr{ptr} {}
   auto operator()(TArgs... args) { return (*ptr)(args...); }
+  const auto &get() const { return *this; }
 
  private:
   R (*ptr)(TArgs...){};
@@ -490,6 +493,7 @@ template <class R, class TBase, class... TArgs, class T>
 struct zero_wrapper<R (TBase::*)(TArgs...) noexcept, T> {
   explicit zero_wrapper(R (TBase::*ptr)(TArgs...) noexcept) : ptr{ptr} {}
   auto operator()(TBase &self, TArgs... args) { return (self.*ptr)(args...); }
+  const auto &get() const { return *this; }
 
  private:
   R (TBase::*ptr)(TArgs...) noexcept {};
@@ -498,6 +502,7 @@ template <class R, class TBase, class... TArgs, class T>
 struct zero_wrapper<R (TBase::*)(TArgs...) const noexcept, T> {
   explicit zero_wrapper(R (TBase::*ptr)(TArgs...) const noexcept) : ptr{ptr} {}
   auto operator()(TBase &self, TArgs... args) { return (self.*ptr)(args...); }
+  const auto &get() const { return *this; }
 
  private:
   R (TBase::*ptr)(TArgs...) const noexcept {};
@@ -506,6 +511,7 @@ template <class R, class... TArgs, class T>
 struct zero_wrapper<R (*)(TArgs...) noexcept, T> {
   explicit zero_wrapper(R (*ptr)(TArgs...) noexcept) : ptr{ptr} {}
   auto operator()(TArgs... args) { return (*ptr)(args...); }
+  const auto &get() const { return *this; }
 
  private:
   R (*ptr)(TArgs...) noexcept {};
@@ -1706,7 +1712,7 @@ class sm {
     aux::get<sm_impl<TSM>>(sub_sms_).start(deps_, sub_sms_);
   }
   template <class... TDeps, __BOOST_SML_REQUIRES((sizeof...(TDeps) > 1) && aux::is_unique_t<TDeps...>::value)>
-  explicit sm(TDeps &&...deps) : deps_{aux::init{}, aux::pool<TDeps...>{deps...}}, sub_sms_{aux::pool<TDeps...>{deps...}} {
+  explicit sm(TDeps &&... deps) : deps_{aux::init{}, aux::pool<TDeps...>{deps...}}, sub_sms_{aux::pool<TDeps...>{deps...}} {
     aux::get<sm_impl<TSM>>(sub_sms_).start(deps_, sub_sms_);
   }
   sm(aux::init, deps_t &deps) : deps_{deps}, sub_sms_{deps} { aux::get<sm_impl<TSM>>(sub_sms_).start(deps_, sub_sms_); }
@@ -1736,7 +1742,13 @@ class sm {
     using sm_impl_t = sm_impl<typename TSM::template rebind<type>>;
     using state_t = typename sm_impl_t::state_t;
     using states_ids_t = typename sm_impl_t::states_ids_t;
-    return aux::get_id<state_t, typename TState::type>((states_ids_t *)0) == aux::cget<sm_impl_t>(sub_sms_).current_state_[0];
+    auto result = false;
+    visit_current_states<T>([&](auto state) {
+      (void)state;
+      result |= (aux::get_id<state_t, typename TState::type>((states_ids_t *)0) ==
+                 aux::get_id<state_t, typename decltype(state)::type>((states_ids_t *)0));
+    });
+    return result;
   }
   template <class T = aux::identity<sm_t>, template <class...> class TState>
   bool is(const TState<terminate_state> &) const {
